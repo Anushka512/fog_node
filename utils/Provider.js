@@ -16,9 +16,12 @@ module.exports = (req, res) => {
         // Verify or create user based on the Google profile
         try {
           // Find or create the user based on the Google profile information
-          const existingUser = await User.findOne({ googleId: profile.id });
+          let existingUser = await User.findOne({ googleId: profile.id });
           console.log("This is Response", res);
-          console.log("Existing", existingUser);
+          if(!existingUser){
+            existingUser = await User.findOne({email: profile.emails[0].value});
+          }
+          console.log("Existing", profile.emails[0].value);
           if (existingUser) {
             // User already exists, send token
             const token = generateToken(existingUser);
@@ -34,6 +37,7 @@ module.exports = (req, res) => {
 
           // Generate and send a token
           await newUser.save();
+          const token = generateToken(existingUser);
 
           return done(null, { user: newUser, token });
         } catch (error) {
